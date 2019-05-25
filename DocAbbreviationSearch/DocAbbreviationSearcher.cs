@@ -20,9 +20,9 @@ namespace DocAbbreviationSearch
             set => filepath = File.Exists(value) ? value : throw new ArgumentException("File doesn't exist", nameof(Filepath));
         }
 
-        public HashSet<string> GetAbbreviations(byte mimimalUpperCaseLettersCount)
+        public SortedSet<string> GetAbbreviations(byte mimimalUpperCaseLettersCount)
         {
-            var result = new HashSet<string>();
+            var result = new SortedSet<string>();
 
             using (var document = WordprocessingDocument.Open(Filepath, false))
             using (var textElement = OpenXmlReader.Create(document.MainDocumentPart.RootElement))
