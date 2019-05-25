@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 
 namespace DocAbbreviationSearch
 {
@@ -17,18 +20,24 @@ namespace DocAbbreviationSearch
             set => filepath = File.Exists(value) ? value : throw new ArgumentException("File doesn't exist", nameof(Filepath));
         }
 
-        public IEnumerable<string> GetAbbreviations()
+        public HashSet<string> GetAbbreviations(byte mimimalUpperCaseLettersCount)
         {
-            if (File.Exists(Filepath))
-            {
-                var result = new HashSet<string>();
+            var result = new HashSet<string>();
 
-                return result;
-            }
-            else
+            using (var document = WordprocessingDocument.Open(Filepath, false))
+            using (var textElement = OpenXmlReader.Create(document.MainDocumentPart.RootElement))
             {
-                throw new FileNotFoundException("File doesn't exist", filepath);
+                while (textElement.Read())
+                {
+                    result.UnionWith(textElement.GetText()
+                        .Split(null)
+                        .Select((word) => word.Trim())
+                        .Where((word) => word.Count((symbol) => char.IsUpper(symbol)) >= mimimalUpperCaseLettersCount)
+                    );
+                }
             }
+
+            return result;
         }
 
         private string filepath;
